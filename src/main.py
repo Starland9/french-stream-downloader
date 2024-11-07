@@ -28,12 +28,26 @@ def uqload_dl(url):
     uqload.get_video_info()
 
 
+def get_already_downloaded_files_count():
+    count = 0
+    for file in os.listdir("output"):
+        if file.endswith(".mp4"):
+            count += 1
+    return count
+
+
 if __name__ == "__main__":
     driver.get(
         "https://fsmirror7.lol/s-tv/167126-icarly-saison-1-streaming-complet-vf-vostfr.html"
     )
     links = get_all_links_containing_uqload(driver)
     print("We have {} links".format(len(links)))
+
+    already_downloaded = get_already_downloaded_files_count()
+    print("We have {} already downloaded files".format(already_downloaded))
+
+    links = links[already_downloaded:]
+
     with ProgressBar(total=len(links)) as progress_bar:
         for link in links:
             print(f"Downloading {link}")
