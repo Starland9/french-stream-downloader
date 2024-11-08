@@ -51,7 +51,6 @@ class FrenchStreamDlWindow(QMainWindow, Ui_MainWindow):
 
     def init_driver(self, driver: webdriver):
         self.driver = driver
-        
 
     def connect_actions(self):
         self.search_toolButton.clicked.connect(self.do_web_search)
@@ -64,9 +63,14 @@ class FrenchStreamDlWindow(QMainWindow, Ui_MainWindow):
         self.search_thread.start()
 
     def fill_all_medias(self, medias: list[Media]):
+        self.clear_all_medias()
         self.search_toolButton.setEnabled(True)
         self.search_toolButton.setText("Search")
 
         for media in medias:
             media_widget = MediaWidget(self.driver, media)
             self.verticalLayout.addWidget(media_widget)
+
+    def clear_all_medias(self):
+        for i in reversed(range(self.verticalLayout.count())):
+            self.verticalLayout.itemAt(i).widget().deleteLater()

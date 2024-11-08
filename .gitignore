@@ -5,3 +5,5 @@
 output
 src/test.py
 downloads
+build/
+dist
