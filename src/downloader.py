@@ -46,7 +46,13 @@ class UqloadMediasProviderThread(QThread):
 
     def get_all_uqvideos(self):
         links = self.get_all_links_containing_uqload()
-        return [self.get_uqvideo_from_link(link) for link in links]
+        uqvideos = []
+        for link in links:
+            try:
+                uqvideos.append(self.get_uqvideo_from_link(link))
+            except:
+                pass
+        return uqvideos
 
 
 class DownloaderThread(QThread):
