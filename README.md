@@ -1,4 +1,4 @@
-# UQLOAD BY FRENCH-STREAM DOWNLOADER
+# FRENCH-STREAM DOWNLOADER POWERED BY UQLOAD
 ### Download videos on french stream with uqload
 
 
