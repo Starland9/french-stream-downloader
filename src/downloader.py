@@ -7,6 +7,7 @@ from models.uqvideo import UqVideo
 from uqload_dl import UQLoad
 from selenium import webdriver
 import os
+from selenium.webdriver.common.by import By
 
 
 class UqloadMediasProviderThread(QThread):
@@ -24,23 +25,24 @@ class UqloadMediasProviderThread(QThread):
         self.driver.get(self.url)
 
         try:
-            self.driver.find_element(
-                "xpath", "//button[contains(@data-player, 'Uqload')]"
-            ).click()
-            video_iframe = self.driver.find_element(
-                "xpath", "//iframe[contains(@src, 'uqload')]"
-            )
-            link = video_iframe.get_attribute("src")
-            return [link]
+            div_uqload = self.driver.find_element(
+                By.CSS_SELECTOR, "div.player-option[player-border][data-url-default*='uqload']")
+
+            url_default = div_uqload.get_attribute("data-url-default")
+
+            link = url_default
+            return ["https://uqload.net/embed-xhlramllr1g5.html"]
         except:
             pass
 
-        links = self.driver.find_elements("xpath", "//a[contains(@href, 'uqload')]")
+        links = self.driver.find_elements(
+            "xpath", "//a[contains(@href, 'uqload')]")
         result = [link.get_attribute("href") for link in links]
         print(result)
         return result
 
-    def get_uqvideo_from_link(self, link):
+    @staticmethod
+    def get_uqvideo_from_link(link):
         uqload = UQLoad(url=link)
         return UqVideo(dict=uqload.get_video_info(), html_url=link)
 
@@ -89,6 +91,8 @@ class DownloaderThread(QThread):
 class DownloaderWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, driver, media: Media):
         super().__init__()
+        self.uqvideos = None
+        self.dlThread = None
         self.setupUi(self)
         self.retranslateUi(self)
 
@@ -107,10 +111,13 @@ class DownloaderWindow(QMainWindow, Ui_MainWindow):
 
         self.tableWidget.setRowCount(len(uqvideos))
         for index, uqvideo in enumerate(uqvideos):
-            self.tableWidget.setItem(index, 0, QTableWidgetItem(str(index + 1)))
+            self.tableWidget.setItem(
+                index, 0, QTableWidgetItem(str(index + 1)))
             self.tableWidget.setItem(index, 1, QTableWidgetItem(uqvideo.title))
-            self.tableWidget.setItem(index, 2, QTableWidgetItem(uqvideo.duration))
-            self.tableWidget.setItem(index, 3, QTableWidgetItem(uqvideo.resolution))
+            self.tableWidget.setItem(
+                index, 2, QTableWidgetItem(uqvideo.duration))
+            self.tableWidget.setItem(
+                index, 3, QTableWidgetItem(uqvideo.resolution))
             self.tableWidget.setItem(index, 4, QTableWidgetItem(uqvideo.size))
             self.tableWidget.setItem(index, 5, QTableWidgetItem(uqvideo.type))
 
@@ -120,7 +127,8 @@ class DownloaderWindow(QMainWindow, Ui_MainWindow):
     def download(self):
         self.statusbar.showMessage("Downloading... Please wait")
         self.dlThread = DownloaderThread(self.uqvideos)
-        self.dlThread.current_uqvideo_getted.connect(self.current_uqvideo_getted)
+        self.dlThread.current_uqvideo_getted.connect(
+            self.current_uqvideo_getted)
         self.dlThread.on_dl_progress.connect(self.dl_progress)
         self.dlThread.on_dl_complete.connect(self.download_complete)
         self.dlThread.start()

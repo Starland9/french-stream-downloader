@@ -7,3 +7,5 @@ src/test.py
 downloads
 build/
 dist
+src/links.txt
+src/ext/adblocker.crx

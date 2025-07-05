@@ -1,10 +1,16 @@
+import time
+
 from PyQt6.QtWidgets import QApplication, QMainWindow
+from selenium.webdriver.common.by import By
+
 from ui.main_window import Ui_MainWindow
 from selenium import webdriver
 import os
 from models.media import Media
 from PyQt6.QtCore import QThread, pyqtSignal
 from media_ui import MediaWidget
+import pyautogui
+import urllib.parse
 
 
 class SearchThread(QThread):
@@ -12,14 +18,19 @@ class SearchThread(QThread):
 
     def __init__(self, driver: webdriver, text: str):
         super().__init__()
-        self.driver = driver
+        self.driver: webdriver = driver
         self.text = text
 
     def run(self):
-        self.driver.get("https://fsmirror7.lol/")
-        search_field = self.driver.find_element("xpath", "//input[@id='story']")
-        search_field.send_keys(self.text)
-        search_field.submit()
+        uri = urllib.parse.quote(self.text)
+        self.driver.get(f"https://www.french-streaming.tv/search/{uri}")
+        # search_field = self.driver.find_element(
+        #     "xpath", "//input[@id='story']")
+        # search_field.send_keys(self.text)
+        # pyautogui.press("enter")
+        # time.sleep(2)
+        # # body = self.driver.find_element(By.TAG_NAME, "body")
+        # # body.click()
         self.fill_all_medias()
 
     def fill_all_medias(self):
@@ -27,7 +38,7 @@ class SearchThread(QThread):
             "xpath", "//div[contains(@class, 'short serie')]"
         )
         films = self.driver.find_elements(
-            "xpath", "//div[contains(@class, 'short film')]"
+            "xpath", "//div[contains(@class, 'short-in nl')]"
         )
 
         all_max_10 = series + films
@@ -42,6 +53,7 @@ class SearchThread(QThread):
 class FrenchStreamDlWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, driver: webdriver):
         super().__init__()
+        self.driver = None
         self.setupUi(self)  # (12,4)-(44,57)
         self.retranslateUi(self)
         self.init_driver(driver)  # init_driver
@@ -58,7 +70,8 @@ class FrenchStreamDlWindow(QMainWindow, Ui_MainWindow):
     def do_web_search(self):
         self.search_toolButton.setEnabled(False)
         self.search_toolButton.setText("Searching...")
-        self.search_thread = SearchThread(self.driver, self.titleLineEdit.text())
+        self.search_thread = SearchThread(
+            self.driver, self.titleLineEdit.text())
         self.search_thread.searchCompleted.connect(self.fill_all_medias)
         self.search_thread.start()
 
