@@ -17,7 +17,8 @@ if __name__ == "__main__":
     for link in links:
         print(f"Downloading {link}")
         link = link.strip()
-        uqload = UQLoad(link, output_dir="output", on_progress_callback=on_progress)
+        uqload = UQLoad(link, output_dir="output",
+                        on_progress_callback=on_progress)
         uqload.download()
         time.sleep(1)
 

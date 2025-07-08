@@ -9,7 +9,6 @@ import os
 from models.media import Media
 from PyQt6.QtCore import QThread, pyqtSignal
 from media_ui import MediaWidget
-import pyautogui
 import urllib.parse
 
 

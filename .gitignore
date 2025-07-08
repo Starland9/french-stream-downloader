@@ -9,3 +9,5 @@ build/
 dist
 src/links.txt
 src/ext/adblocker.crx
+
+src/ext

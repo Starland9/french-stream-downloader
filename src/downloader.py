@@ -24,21 +24,10 @@ class UqloadMediasProviderThread(QThread):
     def get_all_links_containing_uqload(self):
         self.driver.get(self.url)
 
-        try:
-            div_uqload = self.driver.find_element(
-                By.CSS_SELECTOR, "div.player-option[player-border][data-url-default*='uqload']")
-
-            url_default = div_uqload.get_attribute("data-url-default")
-
-            link = url_default
-            return ["https://uqload.net/embed-xhlramllr1g5.html"]
-        except:
-            pass
-
         links = self.driver.find_elements(
-            "xpath", "//a[contains(@href, 'uqload')]")
-        result = [link.get_attribute("href") for link in links]
-        print(result)
+            "xpath", "//div[contains(@data-url-default, 'uqload')]")
+        result = [link.get_attribute("data-url-default") for link in links]
+
         return result
 
     @staticmethod
