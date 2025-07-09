@@ -12,3 +12,4 @@ src/ext/adblocker.crx
 
 src/ext
 test.py
+.script

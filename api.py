@@ -3,23 +3,28 @@ import uvicorn
 from fastapi import FastAPI, Body, BackgroundTasks
 from fastapi.concurrency import run_in_threadpool
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 import urllib.parse
 from src.models.media import Media
 from src.models.uqvideo import UqVideo
 from uqload_dl import UQLoad
 import os
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
+
 
 # --- Constants ---
 DOWNLOADS_DIR = os.path.join(os.getcwd(), "downloads")
 
 # --- Selenium WebDriver Setup ---
-chrome_options = Options()
+chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-driver = webdriver.Chrome(options=chrome_options)
+driver = webdriver.Chrome(
+    service=ChromeService(ChromeDriverManager().install()), options=chrome_options
+)
+
 
 # --- FastAPI App ---
 app = FastAPI(
@@ -30,13 +35,14 @@ app = FastAPI(
 
 # --- Helper Functions ---
 
+
 def search_media(text: str) -> list[Media]:
     """
     Searches for media on french-streaming.tv and returns a list of Media objects.
     """
     uri = urllib.parse.quote(text)
     driver.get(f"https://www.french-streaming.tv/search/{uri}")
-    
+
     series = driver.find_elements(
         "xpath", "//div[contains(@class, 'short serie')]"
     )
@@ -49,6 +55,7 @@ def search_media(text: str) -> list[Media]:
         all_results = all_results[:10]
 
     return [Media.from_web_element(sf) for sf in all_results]
+
 
 async def get_uqvideos_from_media_url(url: str) -> list[UqVideo]:
     """
@@ -63,12 +70,14 @@ async def get_uqvideos_from_media_url(url: str) -> list[UqVideo]:
         video_links_elements = driver.find_elements(
             "xpath", "//a[contains(@data-href, 'uqload')]"
         )
-        links = [link.get_attribute("data-href") for link in video_links_elements]
+        links = [link.get_attribute("data-href")
+                 for link in video_links_elements]
     except Exception:
         links_elements = driver.find_elements(
             "xpath", "//div[contains(@data-url-default, 'uqload')]"
         )
-        links = [link.get_attribute("data-url-default") for link in links_elements]
+        links = [link.get_attribute("data-url-default")
+                 for link in links_elements]
 
     uqvideos = []
     for link in links:
@@ -82,13 +91,14 @@ async def get_uqvideos_from_media_url(url: str) -> list[UqVideo]:
             pass
     return uqvideos
 
+
 async def download_video_in_background(video_url: str):
     """
     Downloads a video from a UQload URL in the background.
     """
     if not os.path.exists(DOWNLOADS_DIR):
         os.makedirs(DOWNLOADS_DIR)
-    
+
     try:
         uqload = UQLoad(url=video_url, output_dir=DOWNLOADS_DIR)
         # Run the blocking download call in a thread pool as well
@@ -104,13 +114,14 @@ async def download_video_in_background(video_url: str):
 async def search(query: str):
     """
     Searches for movies and series on French-Stream.
-    
+
     - **query**: The search term (e.g., "The Matrix", "La Casa de Papel").
     """
     # This is CPU-bound by Selenium, could also be run in a threadpool
     # but let's keep it simple for now.
     search_results = await run_in_threadpool(search_media, query)
     return {"results": [media.to_dict() for media in search_results]}
+
 
 @app.post("/get-videos", summary="Get video links from a media URL")
 async def get_videos(media_url: str = Body(..., embed=True, description="The URL of the media page from a search result.")):
@@ -119,6 +130,7 @@ async def get_videos(media_url: str = Body(..., embed=True, description="The URL
     """
     video_results = await get_uqvideos_from_media_url(media_url)
     return {"results": [video.to_dict() for video in video_results]}
+
 
 @app.post("/download", summary="Download a video in the background")
 async def download(background_tasks: BackgroundTasks, video_url: str = Body(..., embed=True, description="The UQload page URL of the video to download.")):
@@ -131,14 +143,17 @@ async def download(background_tasks: BackgroundTasks, video_url: str = Body(...,
 
 # --- Lifecycle Events ---
 
+
 @app.on_event("startup")
 def startup_event():
     if not os.path.exists(DOWNLOADS_DIR):
         os.makedirs(DOWNLOADS_DIR)
 
+
 @app.on_event("shutdown")
 def shutdown_event():
     driver.quit()
+
 
 if __name__ == "__main__":
     uvicorn.run("api:app", host="0.0.0.0", port=8000, reload=True)
