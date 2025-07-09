@@ -24,6 +24,22 @@ class UqloadMediasProviderThread(QThread):
     def get_all_links_containing_uqload(self):
         self.driver.get(self.url)
 
+        try:
+            uqloadButton = self.driver.find_element(
+                "xpath", "//a[contains(@data-href, 'uqload') and contains(@id, 'singh1')]"
+            )
+
+            uqloadButton.click()
+
+            video_links = self.driver.find_elements(
+                "xpath", "//a[contains(@data-href, 'uqload')]"
+            )
+            result = [link.get_attribute("data-href") for link in video_links]
+            return result
+
+        except Exception as e:
+            print(e)
+
         links = self.driver.find_elements(
             "xpath", "//div[contains(@data-url-default, 'uqload')]")
         result = [link.get_attribute("data-url-default") for link in links]
