@@ -15,10 +15,10 @@ RUN apt-get update && \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     # Install Chrome
     && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    && apt-get install -y google-chrome-stable
     # Clean up
-    && apt-get purge -y --auto-remove wget gnupg \
-    && rm -rf /var/lib/apt/lists/*
+    # && apt-get purge -y --auto-remove wget gnupg \
+    # && rm -rf /var/lib/apt/lists/*
 
 # Stage 2: Application setup
 FROM base AS app
