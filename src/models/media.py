@@ -16,9 +16,12 @@ class Media:
         image_url = element.find_element("xpath", ".//img").get_attribute("src")
         return Media(title, url, image_url)
 
-    def __str__(self):
+    def to_dict(self):
         return {
             "title": self.title,
             "url": self.url,
             "image_url": self.image_url,
-        }.__str__()
+        }
+
+    def __str__(self):
+        return self.to_dict().__str__()
